@@ -35,3 +35,4 @@ $ cd raw
 $ prefetch SAMN08784142
 $ fasterq-dump *.sra
 $ gzip *.fastq
+
