@@ -1,3 +1,15 @@
+**What is the goal of this project?**
+
+The goal of this project is to perform a bioinformatics workflow, including trimming reads, assembling contigs, identifying viruses and analyzing diversity in our sample (accession # = SAMN08784142) using R.
+Get familiar with how to use bioinformatics tools and make a workflow relevant to scientific questions. 
+
+**What files will be found in this repository?**
+1st step: directory named “fastq” for original *.sra files that were made into fastq format 
+2nd step: put these *sra files once they are unzipped in a folder named “raw” to organize these raw files before trimmomatic 
+Also put these files into the class bucket
+
+**What is our goal for today, 3/12?** 
+Our goal for today is cleaning our reads. We will perform fastqc, then Trimmomatic, then fastqc again on our sample.
 
 
 $ module load anaconda3
