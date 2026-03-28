@@ -76,7 +76,8 @@ $ fastqc -h
 $ mkdir -p fastqc_out
 $ fastqc -o fastqc_out SRR*
 
-**Result Files added to side-bar**
+****Result Files in ReadMe**
+
 
 
 # Step 1: Installing megahit by creating an environment → module loading mamba 
