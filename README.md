@@ -1,38 +1,29 @@
 # Group_Viromics_Workflow_Project
 BIOL-3615 Group Project
 
-Notes 3/12: 
+See MasterNotes.md for goals and code. The following readme contains all of our accompanying results graphs and images. 
 
-**What is the goal of this project?** 
-The goal of this project is to perform a bioinformatics workflow, including trimming reads, assembling contigs, identifying viruses and analyzing diversity in our sample (accession # = SAMN08784142) using R. 
+All Trimmomatic Result Files: 
+Sample 1 R1_Cleaned_Paired 
+<img width="442" height="265" alt="Screenshot 2026-03-27 at 10 06 02 PM" src="https://github.com/user-attachments/assets/c4dcb46e-35f2-4204-a934-b1bb36a9fcaf" />
+Sample 1_R1_Cleaned_Unpaired
+<img width="477" height="283" alt="Screenshot 2026-03-27 at 10 06 43 PM" src="https://github.com/user-attachments/assets/1b442a7b-4d67-46a5-b72b-c599a4295042" />
+Sample 1_R2_Cleaned_Paired
+<img width="452" height="256" alt="Screenshot 2026-03-27 at 10 07 14 PM" src="https://github.com/user-attachments/assets/5e8921c4-a359-4069-8b8f-0bdafc45541a" />
+Sample 1_R2_Cleaned_Unpaired
+<img width="428" height="262" alt="Screenshot 2026-03-27 at 10 07 33 PM" src="https://github.com/user-attachments/assets/3f9d561b-1008-4a47-88e2-82c0b6f1ace5" />
 
-**What files will be found in this repository?**
-1st step: directory named “fastq” for original *.sra files that were made into fastq format 
-2nd step: put these *sra files once they are unzipped in a folder named “raw” to organize these raw files before trimmomatic 
----Also put these files into the class bucket
+Megahit Results
+<img width="793" height="46" alt="Screenshot 2026-03-27 at 10 08 11 PM" src="https://github.com/user-attachments/assets/d84d64f8-38f8-497a-a073-fcef014c7a4e" />
 
+Slurm Script for Bowtie 
+<img width="576" height="275" alt="Screenshot 2026-03-27 at 10 09 15 PM" src="https://github.com/user-attachments/assets/3048b06a-7d18-4727-bb65-d5e75441d86d" />
 
-**What is our goal for today?**
-Our goal for today is cleaning our reads. We will perform fastqc, then Trimmomatic, then fastqc again on our sample. 
+vOTU Heatmap of Relative Abundance
+<img width="583" height="401" alt="Screenshot 2026-03-27 at 10 09 41 PM" src="https://github.com/user-attachments/assets/d247c29f-9f7e-49c7-a3aa-e1746178bf04" />
 
-**What steps did we take & why?** 
-#Load Anaconda module and SRA tools: 
-$ module load anaconda3
-$ conda create -n sra_env -c bioconda sra-tools
-#Initiate and active conda environment: 
-$ conda init
-$ conda activate sra_env
-#Make directories for file organization, change into directory for raw files
-$ mkdir fastqfiles 
-$ cd fastqfiles
-$ mkdir SRR6996006
-$ cd SRR6996006
-$ mkdir raw
-$ mkdir cleaned_reads
-$ mkdir assembly
-$ cd raw
-#Fetch files and change to fastq format, compress
-$ prefetch SAMN08784142
-$ fasterq-dump *.sra
-$ gzip *.fastq
+Per Sample Richness
+<img width="452" height="314" alt="Screenshot 2026-03-27 at 10 10 06 PM" src="https://github.com/user-attachments/assets/6945b925-0ff9-4c0c-83a9-8b21add9afa2" />
 
+Per Sample Viral Diversity
+<img width="286" height="341" alt="Screenshot 2026-03-27 at 10 10 28 PM" src="https://github.com/user-attachments/assets/5ddb736a-cf8e-4a0d-a74d-1af807c47b25" />
