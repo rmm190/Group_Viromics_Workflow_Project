@@ -8,9 +8,10 @@ Get familiar with how to use bioinformatics tools and make a workflow relevant t
 2nd step: put these *sra files once they are unzipped in a folder named “raw” to organize these raw files before trimmomatic 
 Also put these files into the class bucket
 
-**What is our goal for today, 3/12?** 
+**What is our goal for today, 3/12? **
 Our goal for today is cleaning our reads. We will perform fastqc, then Trimmomatic, then fastqc again on our sample.
 
+***See the README file for all results images****
 
 $ module load anaconda3
 $ conda create -n sra_env -c bioconda sra-tools
@@ -78,7 +79,8 @@ $ fastqc -o fastqc_out SRR*
 
 ****Result Files in ReadMe**
 
-
+**What is our goal for today 3/17?**
+Assemble contigs by running Megahit software. View how many contigs were assembled and the quality with seqkit.  
 
 # Step 1: Installing megahit by creating an environment → module loading mamba 
 $ Module load mamba/ 
@@ -140,9 +142,10 @@ $ mamba install -c bioconda seqkit
 # Running onto your assembly 
 $ seqkit stats -a final.contigs.fa
 
+**See README for results**
 
-
-
+**What is our goal for today 3/19**
+Identify viral contigs & cluster vOTUs using Virsorter technology
 
 # Install Virsorter
 $ module load mamba
@@ -207,6 +210,10 @@ $ mamba activate megahit-env
 $ seqkit seq -m 5000 final-viral-combined.fa | grep -c “>”
 $ seqkit seq -m 5000 final-viral-combined.fa > final-viral-combined_min5kb.fa
 
+See README for results 
+
+**What is our goal for today 3/24?**
+Begin mapping reads to vOTUs and check quality of clusters with Checkv. Checkv accomplishes completeness, contamination, and provirus trimming. Then, run a bowtie script to create alignment files. Upload alignment files to the larger class data set for analysis. 
 
 # Set up Checkv: 
 $ Module load checkv
@@ -304,8 +311,10 @@ samtools index "${SAMPLE}_sorted.bam"
 
 echo "Finished ${SAMPLE}"
 
+**See README for graphs/images** 
 
-
+**What is the goal of today 3/26?**
+With all of the class data, use R studio programs to visualize metrics such as abundance, diversity and richness in plots. This helps us better understand the viral community ecology. 
 
 # Visualizing the abundance data across the class with a heat map in R studio. Here is the script we used (next page): 
 
