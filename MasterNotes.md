@@ -15,6 +15,7 @@ Our goal for today is cleaning our reads. We will perform fastqc, then Trimmomat
 
 ```$ module load anaconda3
 $ conda create -n sra_env -c bioconda sra-tools ```
+
 # Initiate and active conda environment: 
 $ conda init
 $ conda activate sra_env
