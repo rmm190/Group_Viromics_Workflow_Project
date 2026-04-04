@@ -8,49 +8,64 @@ Get familiar with how to use bioinformatics tools and make a workflow relevant t
 2nd step: put these *sra files once they are unzipped in a folder named “raw” to organize these raw files before trimmomatic 
 Also put these files into the class bucket
 
-**What is our goal for today, 3/12? **
+**What is our goal for today, 3/12?**
 Our goal for today is cleaning our reads. We will perform fastqc, then Trimmomatic, then fastqc again on our sample.
 
 ***See the README file for all results images****
+
+**Step 1: Downloading our fastq files.**
+These additional steps are because our tiles aren't available in the normal ftp format.
 ```
+# Go to home directory and load anaconda module. Install SRA-tools through an environment.
 module load anaconda3
 conda create -n sra_env -c bioconda sra-tools
 ```
-
-# Initiate and active conda environment: 
-
-$ conda init
-$ conda activate sra_env
-
+```
+# Initiate and active conda environment. Make sure to say "yes" when prompted by the tool. 
+conda init
+conda activate sra_env
+```
+```
+#Fetch files and change to fastq format, compress. You might have to be a bit patient with this step.
+prefetch SAMN08784142
+fasterq-dump *.sra
+gzip *.fastq
+```
+**Step 2: Getting organized to set ourselves up for success throughout our workflow** 
+```
 # Make directories for file organization, change into directory for raw files
-
-`$ mkdir fastqfiles 
-$ cd fastqfiles
-$ mkdir SRR6996006
-$ cd SRR6996006
-$ mkdir raw
-$ mkdir cleaned_reads
-$ mkdir assembly
-$ cd raw `
-
-Fetch files and change to fastq format, compress
-$ prefetch SAMN08784142
-$ fasterq-dump *.sra
-$ gzip *.fastq
-# FastQC of raw data:
+mkdir fastqfiles 
+cd fastqfiles
+mkdir SRR6996006
+cd SRR6996006
+mkdir raw
+mkdir cleaned_reads
+mkdir assembly
+cd raw
+```
+**Step 3: Running FastQC of your raw data**
+```
+# FastQC of raw data. This will evaluate the baseline state of our DNA so that we can make decisions about how to clean it later in our workflow.
 # Enter interactive mode on a compute node (from where you are)
-$ srun --pty bash
-$ module load fastqc
-$ fastqc -h
-$ mkdir -p fastqc_out
-$ fastqc -o fastqc_out SRR6996006.sra_1.fastq.gz SRR6996006.sra_2.fastq.gz
+srun --pty bash
+#Load FastQC
+module load fastqc
+#Confirm that FastQC is available and see options
+fastqc -h
+# Create a directory for the reports (Once per dataset)
+mkdir -p fastqc_out
+#Run FastQC. The -o line tells the program to put the .html and .zip outputs into your output directory
+fastqc -o fastqc_out SRR6996006.sra_1.fastq.gz SRR6996006.sra_2.fastq.gz
+```
+The files produced should be:
+yourfile_fastqc.html
+yourfile_fastqc.zip
 
-
+```
 # Trimmomatic Script
 #!/bin/bash#SBATCH --mail-type=END,FAIL --mail-user=rmm190@georgetown.edu
 #SBATCH --job-name="trim_S1"
 #SBATCH --output="%x.o%j"
-
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
