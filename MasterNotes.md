@@ -1,39 +1,43 @@
-**What is the goal of this project?**
+# What is the goal of this project?
 
 The goal of this project is to perform a bioinformatics workflow, including trimming reads, assembling contigs, identifying viruses and analyzing diversity in our sample (accession # = SAMN08784142) using R.
 Get familiar with how to use bioinformatics tools and make a workflow relevant to scientific questions. 
 
-**What files will be found in this repository?**
+# What files will be found in this repository?
 1st step: directory named “fastq” for original *.sra files that were made into fastq format 
 2nd step: put these *sra files once they are unzipped in a folder named “raw” to organize these raw files before trimmomatic 
 Also put these files into the class bucket
 
-**What is our goal for today, 3/12?**
+# What is our goal for today, 3/12?
 Our goal for today is cleaning our reads. We will perform fastqc, then Trimmomatic, then fastqc again on our sample.
 
 ***See the README file for all results images****
 
-**Step 1: Downloading our fastq files.**
-These additional steps are because our tiles aren't available in the normal ftp format.
+## Step 1: Downloading our fastq files.
+These additional steps are because our files aren't available in the normal ftp format.
 ```
 # Go to home directory and load anaconda module. Install SRA-tools through an environment.
+
 module load anaconda3
 conda create -n sra_env -c bioconda sra-tools
 ```
 ```
 # Initiate and active conda environment. Make sure to say "yes" when prompted by the tool. 
+
 conda init
 conda activate sra_env
 ```
 ```
 #Fetch files and change to fastq format, compress. You might have to be a bit patient with this step.
+
 prefetch SAMN08784142
 fasterq-dump *.sra
 gzip *.fastq
 ```
-**Step 2: Getting organized to set ourselves up for success throughout our workflow** 
+## Step 2: Getting organized to set ourselves up for success throughout our workflow
 ```
 # Make directories for file organization, change into directory for raw files
+
 mkdir fastqfiles 
 cd fastqfiles
 mkdir SRR6996006
@@ -43,23 +47,30 @@ mkdir cleaned_reads
 mkdir assembly
 cd raw
 ```
-**Step 3: Running FastQC of your raw data**
+## Step 3: Running FastQC of your raw data
 ```
 # FastQC of raw data. This will evaluate the baseline state of our DNA so that we can make decisions about how to clean it later in our workflow.
 # Enter interactive mode on a compute node (from where you are)
 srun --pty bash
+
 #Load FastQC
 module load fastqc
+
 #Confirm that FastQC is available and see options
 fastqc -h
+
 # Create a directory for the reports (Once per dataset)
 mkdir -p fastqc_out
+
 #Run FastQC. The -o line tells the program to put the .html and .zip outputs into your output directory
 fastqc -o fastqc_out SRR6996006.sra_1.fastq.gz SRR6996006.sra_2.fastq.gz
 ```
 The files produced should be:
 yourfile_fastqc.html
 yourfile_fastqc.zip
+
+## Step 4: Run Trimmomatic on the files.
+Running trimmomatic is necessary to remove adapters and to trim low quality bases. The quality of reads often tails off at the end of our reads (as evidenced from our initial FastQC analysis. Trimmomatic will remove those while also getting rid of reads that are simply too short for our future needs.
 
 ```
 # Trimmomatic Script
@@ -72,7 +83,17 @@ yourfile_fastqc.zip
 #SBATCH --time=03:00:00
 #SBATCH --mem=10G
 
-# Load Trimmomatic module (“aliases” needed for GU HPC setup here)
+#Load Trimmomatic module (“aliases” needed for GU HPC setup here)
+shopt -s expand_aliases
+module load trimmomatic
+
+#Define paths and variables
+R1=/home/rmm190/group_viromics_project/fastq_raw/sample1_R1_uncleaned_fastqc.zip.gz
+R2=/home/rmm190/group_viromics_project/fastq_raw/sample1_R2_uncleaned_fastqc.zip.gz
+OUTDIR=/home/rmm190//home/rmm190/group_viromics_project/trim_out
+mkdir -p $OUTDIR
+
+#Load Trimmomatic module (“aliases” needed for GU HPC setup here)
 shopt -s expand_aliases
 module load trimmomatic
 
@@ -88,29 +109,58 @@ trimmomatic PE -threads $SLURM_CPUS_PER_TASK \
   $OUTDIR/SRR6996006_R2_paired.fq.gz  $OUTDIR/SRR6996006_R2_unpaired.fq.gz \
   ILLUMINACLIP:/home/rmm190/adapters/TruSeq3-PE.fa:2:30:10 \
   LEADING:3 TRAILING:3 MINLEN:36
+```
+After running Trimmomatic, the quality of our reads significantly improved. Our adapter content was reduced to 0, and while we now have a smaller number of total reads, they are of a much higher quality.
 
+## Step 5: FastQC of clean data:
 
-# FastQC of clean data:
+```
 # Enter interactive mode on a compute node (from where you are)
 $ srun --pty bash
 $ module load fastqc
 $ fastqc -h
 $ mkdir -p fastqc_out
 $ fastqc -o fastqc_out SRR*
+```
+Additionally, the trimmed files need to be put in the bucket after they're checked with FastQC.
 
-****Result Files in ReadMe**
+**Result Files in ReadMe**
 
-**What is our goal for today 3/17?**
+# What is our goal for today 3/17?
 Assemble contigs by running Megahit software. View how many contigs were assembled and the quality with seqkit.  
 
-# Step 1: Installing megahit by creating an environment → module loading mamba 
-$ Module load mamba/ 
+Overview of project organization to this point:
+/home/netID/project
+ - Raw/
+ - Fastqc
+     - Has outputs from fastqc runs
+ - Trimmomatic
+     - Has outputs from trimmomatic runs
+ - Metagit
+     - Has outputs from megahit step (running today)
+ - Slurmscripts
+      - Has all of the slurm scripts for any step requiring one
+ - Logs
+       - Has error logs and output logs for anything requiring a slurm script.
 
-# Step 2: Create an environment for megahit 
+Before starting the megahit workflow, you'll want to get organized.
+- Make sure you have cleaned fastqc files (after FastQC and Trimmomatic)
+- Those files are paired-end with clear names
+- You know the absolute path to those files
+- You have the output directory (megahit folder)
+
+## Step 1: Install Megahit
+```
+$ module load mamba/ 
+```
+
+## Step 2: Create an environment for megahit 
+```
 $ mamba create -y -n megahit-env -c conda-forge -c bioconda megahit
+```
 
-# Script for MegaHit
-
+## Step 3: Run Megahit
+```
 #!/bin/bash
 #SBATCH --job-name=megahit_SRR6996006
    	# how job appears in the queue
@@ -153,9 +203,14 @@ megahit \
 
 echo "Done. Contigs should be in: ${OUTDIR}/final.contigs.fa"
 
+```
 
-# Step 5: Checking quality 
-# Downloading seqkit
+## Step 4: Find your results
+No new code required, but you'll want to navigate to your output directory. Make sure you see a file called "final.contigs.fa" which contains your assembled contigs with which you need to proceed. You should also check the log in the log directory and see severarl intermediate files from the assembly process
+
+## Step 5: Checking quality 
+```
+# Downloading seqkit. Seqkit is a "lightweight" command that you can use on the login node. Seqkit allows you to manipulate and analyze FASTA files.
 $ module load mamba/
 $ mamba activate megahit-env        
 $ mamba install -c bioconda seqkit
@@ -164,6 +219,7 @@ $ mamba install -c bioconda seqkit
 $ seqkit stats -a final.contigs.fa
 
 **See README for results**
+
 
 **What is our goal for today 3/19**
 Identify viral contigs & cluster vOTUs using Virsorter technology
