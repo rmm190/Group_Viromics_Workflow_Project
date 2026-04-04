@@ -490,14 +490,12 @@ echo "Finished ${SAMPLE}"
 
 **See README for graphs/images** 
 
-**What is the goal of today 3/26?**
+# What is the goal of today 3/26?
 With all of the class data, use R studio programs to visualize metrics such as abundance, diversity and richness in plots. This helps us better understand the viral community ecology. 
 
-# Visualizing the abundance data across the class with a heat map in R studio. Here is the script we used (next page): 
+## Step 1: Visualizing the abundance data across the class with a heat map in R studio.
 
-
-
- 
+``` 
 # ==== EDIT THESE THREE LINES ====
 filename <- "/Users/janesmith/Downloads/R Studio Analysis/ClassProject_votus_12367_coverm.tsv"  # Excel file name
 tpm_threshold <- 10                                  # keep vOTUs with max TPM > this
@@ -544,9 +542,11 @@ pheatmap(mat_log,
          fontsize_row = 8,
          fontsize_col = 10,
          main = "vOTU relative abundance (log10 TPM + 1)")
+```
 
+## Step 2: Create plot of per sample richness and alpha diversity.
 
-# Also created a plot of per sample richness and alpha diversity, using this script: 
+```
 ## Install once if needed:
 install.packages(c("vegan", "pheatmap", "RColorBrewer"))
 
@@ -612,6 +612,7 @@ barplot(
   ylab = "Shannon diversity",
   main = "Per-sample viral diversity"
 )
+```
 
 
 
