@@ -115,12 +115,12 @@ After running Trimmomatic, the quality of our reads significantly improved. Our 
 ## Step 5: FastQC of clean data:
 
 ```
-# Enter interactive mode on a compute node (from where you are)
-$ srun --pty bash
-$ module load fastqc
-$ fastqc -h
-$ mkdir -p fastqc_out
-$ fastqc -o fastqc_out SRR*
+Enter interactive mode on a compute node (from where you are)
+srun --pty bash
+module load fastqc
+fastqc -h
+mkdir -p fastqc_out
+fastqc -o fastqc_out SRR*
 ```
 Additionally, the trimmed files need to be put in the bucket after they're checked with FastQC.
 
@@ -151,12 +151,12 @@ Before starting the megahit workflow, you'll want to get organized.
 
 ## Step 1: Install Megahit
 ```
-$ module load mamba/ 
+module load mamba/ 
 ```
 
 ## Step 2: Create an environment for megahit 
 ```
-$ mamba create -y -n megahit-env -c conda-forge -c bioconda megahit
+mamba create -y -n megahit-env -c conda-forge -c bioconda megahit
 ```
 
 ## Step 3: Run Megahit
@@ -211,31 +211,55 @@ No new code required, but you'll want to navigate to your output directory. Make
 ## Step 5: Checking quality 
 ```
 # Downloading seqkit. Seqkit is a "lightweight" command that you can use on the login node. Seqkit allows you to manipulate and analyze FASTA files.
-$ module load mamba/
-$ mamba activate megahit-env        
-$ mamba install -c bioconda seqkit
+module load mamba/
+mamba activate megahit-env        
+mamba install -c bioconda seqkit
 
 # Running onto your assembly 
-$ seqkit stats -a final.contigs.fa
+seqkit stats -a final.contigs.fa
+```
+### What was the purpose of running megehit?
+Megahit is an assembly program. It's when you take your DNA reads and assemble them into longer sequences (contigs, for our purposes). These contigs will make it easier for us to analyze and annotate our reads. As part of its assembly process, megahit uses what's called de Bruijn graphs. They break reads into k-mers of varying lengths, make graphs of the data, and then follow these graphs to produce reads. Using de Bruijn graphs is useful for metagenomics and larger sets of data that will contain DNA from different organisms. 
 
 **See README for results**
 
 
-**What is our goal for today 3/19**
+# What is our goal for today 3/19?
 Identify viral contigs & cluster vOTUs using Virsorter technology
 
-# Install Virsorter
-$ module load mamba
-$ mamba create -y -n vs2-env -c conda-forge -c bioconda virsorter
+Before beginning, make sure to create new directories for virsorter and votus so that you have places to put your data.
 
-# Download databases for virsorter
+## Some background on virsorter and the process of identifying viruses from a dataset
+The main idea is you want to filter out the "virus-like" reads from everything else. The difficulty lies in determining what is "virus-like" and what is not becuase there is no universal 16S rRNA gene like there is in bacteria for viruses. However, that doesn't mean there aren't ways to make this identification.
+
+Reference-based comparison:
+ - BLAST-like search of predicted proteins against viral databases (similar sequences to known viral proteins)
+ - Number of kits to viral proteins, especially "hallmark" genes (major capsid proteins, terminases, portal proteins, integrases)
+
+Genome patterns:
+ - Enriched in viral genes, few typical cellular genes
+ - Enriched in genes annotated as "hypothetical proteins"
+ - Presence of short, phage-like genomes (circular contigs with matching ends)
+Virsorter is a program that incorporates all of this information and makes decisions about whether reads are "virus-like" or not.
+
+## Step 1: Install Virsorter
+```
+module load mamba
+mamba create -y -n vs2-env -c conda-forge -c bioconda virsorter
+```
+
+## Step 2: Download databases for virsorter
 # Install by creating an environment, installing virsorter
-$ mamba activate vs2-env
-$ rm -rf db 					
-$ virsorter setup -d db -j 4		# run setup for the database
+```
+mamba activate vs2-env
 
-# Virsorter Slurm script
+# Just in case there is a failed attempt before, this step removes the whole directory specified by -d (something that we had a lot of problems with in class.
+rm -rf db 					
+virsorter setup -d db -j 4		# run setup for the database
+```
 
+## Step 3: Run Virsorter2
+```
 #!/bin/bash
 #SBATCH --job-name=virsorter_SRR6996006 
 #SBATCH --nodes=1
@@ -276,28 +300,94 @@ virsorter run \
   --min-length 5000
 
 echo "Done."
+```
 
+## Step 4: Find your results: 
+After VirSorter2 finishes, navigate to your output directory. You should see several files.
 
-# Visualizing results: 
+They should include:
+ - final-viral-boundary.tsv
+ - final-viral-score.tsv
+ - final-viral-combined.fa **This is what you need to proceed!
 
-$ module load mamba/
-$ mamba activate megahit-env        
+## Step 5: Filtering out contigs that are less thatn 5kb
+Anything less than 5kb is not going to be useful for clustering into vOTUS. They simply don't have enough information to accurately be clustered.
 
-# Count contigs + make file with those. Check the number 
-$ seqkit seq -m 5000 final-viral-combined.fa | grep -c “>”
-$ seqkit seq -m 5000 final-viral-combined.fa > final-viral-combined_min5kb.fa
+```
+#You're going to be using seqkit to filter out anything less, so you'll need to load and activate the megahit environment again.
+module load mamba/
+mamba activate megahit-env        
+
+# Count contigs to see how many you have that have a minimum length of 5kb. Then, make a file just for those and check the number of contigs that are in your new file (called final-viral-combined_min5kb.fa)
+seqkit seq -m 5000 final-viral-combined.fa | grep -c “>”
+seqkit seq -m 5000 final-viral-combined.fa > final-viral-combined_min5kb.fa
 
 See README for results 
+```
+## Step 6: Install vclust
+This next step begins the clustering process for all of the representative contigs that have made it through the workflow thus far. vOTUS are OTU-like units, grouped by clustering viral contigs/genomes be sequence similarity. They're used because viruses lack a universal gene marker (like 16S) to compare. Additionally, they serve as operational "species-like" units for estimating viral diversity, community structure, and dynamics.
 
-**What is our goal for today 3/24?**
-Begin mapping reads to vOTUs and check quality of clusters with Checkv. Checkv accomplishes completeness, contamination, and provirus trimming. Then, run a bowtie script to create alignment files. Upload alignment files to the larger class data set for analysis. 
+Depending on the tool or script you use, you can get different results
+We will use vClust, which relies on 95% sequence identity and 85% total coverage.
 
-# Set up Checkv: 
-$ Module load checkv
-$ Checkv download_database
+```
+#Install vclust by creating an environment and activating it
+module load mamba
+mambe create -n votu-env -c bioconda -c conda-forge vclust
+mamba activate votu-env
+```
+## Step 7: Run vclust
 
-# Write and send slurm script for checkv
+```
+#Prefilter similar genome sequence pairs before conducting pairwise alignments.
+vclust prefilter -i final-viral-combined_min5kb.fa
 
+#Align similar genome sequence pairs and calculate pairwise ANI measures
+vclust align final-viral-combined_min5kb.fa -o ani.tsv --filter fltr.txt
+
+#Cluster genome sequences based on given ANI measure and miniumum threashold (these files were generated in the previous steps)
+vclust cluster -i ani.tsv -o clusters.tsv --ids ani.ids.tsv --metric ani --ani 0.95 --out-repr
+```
+## Step 8: Pulling out the vOTU sequences
+```
+#Make a list of the vOTU headers
+# Prints only the second column. Then takes the stream and sorts the values and removes duplicates
+awk '{print$2}' clusters.tsv | sort -u > votu_seeds.txt
+
+#Now, put these vOTU "seed" sequences into a new file.
+seqkit grep -f votu_seeds.txt final-viral-combined_min5kb.fa > votus_final.fa
+
+# Sanity check
+
+#Should equal number of clusters
+wc -l votu_seeds.txt
+
+# Should match votus_seeds.txt
+grep -c ">" votus_final.fa
+```
+
+# What is our goal for today, 3/24?
+Check quality of clusters with Checkv. Checkv accomplishes completeness, contamination, and provirus trimming. Because viral contigs can be partial, chimeric, or include host DNA, we want a way to evaluate the quality of each viral contig.
+
+Some other things CheckV will be doing:
+ - Identify and trim host regions (annotates ORFs and uses gene content, GC content, and other features to detect host-like segments)
+ - Estimate completeness (it comeares each contig to a large database of complete viral genomes using amino-acid identity and alignment coverage eg 40% complete v. 90% complete)
+ - Identify closed genomes (it looks for terminal repeats)
+ - Assign quality tiers: it classifies each sequence into quality categories.
+
+Then, run a bowtie script to create alignment files. Upload alignment files to the larger class data set for analysis. The purpose of running bowtie2 is for mapping our reads to the contigs. Quantifying abundance is a crucial aspect of bowtie2. Seeing how many reads align to each contig is a way to see which viruses are abundant and which ones are relatively rare.
+
+## Step 1: Set up Checkv: 
+```
+#Make sure you're in the checkv folder when you're doing this! You don't want it to download in the wrong folder.
+module load checkv
+checkv download_database ./
+```
+
+
+## Step 2: Run Checkv
+
+```
 #!/bin/bash
 #SBATCH --job-name=checkv
 #SBATCH --output=/home/rmm190/group_viromics_project/logs/checkv-%j.out
@@ -331,22 +421,30 @@ mkdir -p "${OUTDIR}"
 echo "Running CheckV on ${INPUT}"
 checkv end_to_end "${INPUT}" "${OUTDIR}" -d "${CHECKVDB}" -t ${SLURM_CPUS_PER_TASK}
 echo "Done."
+```
 
-#  Find results: 
-# Look at quality_summary_votus.tsv 
-# https://drive.google.com/drive/u/0/folders/1X7hH0vhxEvMmJ2MWs0O7tszbZn3z4swK 
-# **Insert notes here** How many complete? High quality? Low quality? 
+##  Step 3: Find results: 
+After checkv is complete, you'll see a number of files. The one you want to look at is quality_summary_votus.tsv
 
-# Grab the pooled vOTUs from the bucket 
-$ gcloud storage cp gs://gu-biology-dept-class/ClassProject/votus_10kb_6samples.fna /home/jbs172/group_viromics_project/checkv
 
-# Loading Bowtie2
-$ mkdir bowtie2 
-$ mv votus_10kb_6samples.fna bowtie2
-$ module load bowtie2
-$ bowtie2-build votus_10kb_6samples.fna votu_index
+## Step 4: Grab the pooled vOTUs from the bucket:
+This consists of the class's virsorter contigs, filtered for > 10kb, and clustered. Having this data is an important reference point so that we can match reads to more contigs.
+```
+gcloud storage cp gs://gu-biology-dept-class/ClassProject/votus_10kb_6samples.fna /home/jbs172/group_viromics_project/checkv
+```
 
-# Write and send slurm script for Bowtie 
+## Step 5: Loading Bowtie2
+
+```
+mkdir bowtie2 
+mv votus_10kb_6samples.fna bowtie2
+module load bowtie2
+bowtie2-build votus_10kb_6samples.fna votu_index
+```
+
+## Step 6: Run Bowtie2
+
+```
 #!/bin/bash
 #SBATCH --job name=bowtie2_vOTUs                 
 #SBATCH --output=/home/jm3448/Project1/logs/bowtie-%j.out
@@ -387,6 +485,8 @@ echo "Indexing"
 samtools index "${SAMPLE}_sorted.bam"
 
 echo "Finished ${SAMPLE}"
+
+```
 
 **See README for graphs/images** 
 
