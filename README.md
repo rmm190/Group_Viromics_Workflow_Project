@@ -1,6 +1,9 @@
 # Group_Viromics_Workflow_Project
 BIOL-3615 Group Project
 
+# What is the purpose of this project?
+As part of this group viromics workflow, we had seven different viromes sampled from a Swedish bog. Our goals were to repduce the bioinformatic tools used by a previous study to learn about a bioinformatics workflow. We began by learning the importance of notetaking, transparence, and reproducibility in bioinformatics studies. Then, we took our raw data, ran FastQC to get baseline data about our reads, ran it thorugh trimmomatic to clean them, and ran FastQC once again to verify our results. From these cleaned reads, we used megahit to assemble our contigs. To find viruses within our assembled contigs, we used virsorter2. We also clusterd our contigs into vOTUS using vclust and validated our data with checkv. Eventually, we mapped our reads using bowtie2 and analyzed our data with diversity statistics measures and heat maps in R. 
+
 See MasterNotes.md for goals and code. The following readme contains all of our accompanying results graphs and images. 
 
 **TRIMMOMATIC**
