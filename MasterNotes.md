@@ -17,17 +17,21 @@ Our goal for today is cleaning our reads. We will perform fastqc, then Trimmomat
 $ conda create -n sra_env -c bioconda sra-tools `
 
 # Initiate and active conda environment: 
-$ conda init
-$ conda activate sra_env
+
+`$ conda init
+$ conda activate sra_env`
+
 # Make directories for file organization, change into directory for raw files
-$ mkdir fastqfiles 
+
+`$ mkdir fastqfiles 
 $ cd fastqfiles
 $ mkdir SRR6996006
 $ cd SRR6996006
 $ mkdir raw
 $ mkdir cleaned_reads
 $ mkdir assembly
-$ cd raw
+$ cd raw `
+
 Fetch files and change to fastq format, compress
 $ prefetch SAMN08784142
 $ fasterq-dump *.sra
